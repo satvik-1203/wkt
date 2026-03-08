@@ -1,0 +1,449 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #1e1e2e;
+  --bg-secondary: #181825;
+  --bg-surface: #313244;
+  --bg-hover: #45475a;
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
+  --text-muted: #6c7086;
+  --accent: #89b4fa;
+  --accent-hover: #74c7ec;
+  --border: #45475a;
+  --green: #a6e3a1;
+  --red: #f38ba8;
+  --yellow: #f9e2af;
+  --peach: #fab387;
+  --blue: #89b4fa;
+  --draggable-height: 38px;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+
+/* ── Layout ── */
+.draggable-titlebar {
+  -webkit-app-region: drag;
+  height: var(--draggable-height);
+  flex-shrink: 0;
+}
+
+.view-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.view-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.view-page {
+  padding: 0 32px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* ── View header / back ── */
+.view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.view-header .view-title {
+  margin-bottom: 0;
+}
+
+.view-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.view-title-sep {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.back-btn {
+  background: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+
+.back-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ── Projects grid (Screen 1) ── */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.project-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  text-align: left;
+  color: var(--text-primary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.project-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.project-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-card-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-card-remove {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  opacity: 0;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.project-card:hover .project-card-remove {
+  opacity: 1;
+}
+
+.project-card-remove:hover {
+  color: var(--red);
+}
+
+.add-project-btn {
+  background: var(--accent);
+  color: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.add-project-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* ── Worktree list (Screen 2) ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.worktree-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.worktree-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.worktree-item:hover {
+  background: var(--bg-hover);
+}
+
+.worktree-item-label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.worktree-item-main {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.worktree-item-branch {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.worktree-item-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Worktree detail (Screen 3) ── */
+.tab-detail {
+  margin-top: 4px;
+}
+
+.worktree-detail-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-bottom: 2px;
+}
+
+.worktree-detail-branch {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-bottom: 12px;
+}
+
+.tab-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Tab sections ── */
+.tab-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tab-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  margin-bottom: 2px;
+}
+
+.tab-section-icon {
+  font-size: 12px;
+  font-weight: 700;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tab-section-icon.terminal-icon {
+  color: var(--green);
+}
+
+.tab-section-icon.process-icon {
+  color: var(--peach);
+}
+
+.tab-section-icon.editor-icon {
+  color: var(--yellow);
+  font-size: 11px;
+}
+
+.tab-section-icon.browser-icon {
+  color: var(--blue);
+}
+
+.tab-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.tab-section-count {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Tab rows ── */
+.tree-tab-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-primary);
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.tree-tab-row:hover {
+  background: var(--bg-hover);
+}
+
+.tree-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tree-dot.terminal {
+  background: var(--green);
+}
+
+.tree-dot.process {
+  background: var(--peach);
+}
+
+.tree-dot.editor {
+  background: var(--yellow);
+}
+
+.tree-dot.browser {
+  background: var(--blue);
+}
+
+.tree-app-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: lowercase;
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.tree-tab-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.tree-tab-url {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-left: 6px;
+}
+
+.tree-tab-port {
+  color: var(--green);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ── Empty / hints ── */
+.view-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 32px 0;
+}
+
+.view-empty-hint {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.refresh-btn {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.refresh-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Error ── */
+.error-msg {
+  background: rgba(243, 139, 168, 0.1);
+  color: var(--red);
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(243, 139, 168, 0.2);
+  margin: 12px 0;
+  font-size: 12px;
+}
+
+/* ── Loading ── */
+.loading-text {
+  color: var(--text-muted);
+  padding: 20px;
+  text-align: center;
+}
