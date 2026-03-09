@@ -7,9 +7,11 @@
   "private": true,
   "scripts": {
     "prestart": "",
+    "postinstall": "node scripts/patch-universal.js",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:universal": "electron-forge make --arch=universal",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },

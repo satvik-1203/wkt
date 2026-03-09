@@ -21,6 +21,16 @@ out/make/WKT-1.0.0-arm64.dmg
 
 Open the `.dmg` and drag **WKT.app** into your Applications folder.
 
+### "WKT is damaged and can't be opened"
+
+The app isn't code-signed, so macOS Gatekeeper blocks it. After moving WKT to Applications, run:
+
+```bash
+xattr -cr /Applications/WKT.app
+```
+
+Then open it normally.
+
 ### Development
 
 ```bash
