@@ -1,6 +1,8 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 const { VitePlugin } = require('@electron-forge/plugin-vite');
+const { execSync } = require('child_process');
+const path = require('path');
 
 module.exports = {
   packagerConfig: {
@@ -11,6 +13,18 @@ module.exports = {
     universalOptions: {
       mergeASARs: true,
       force: true,
+    },
+  },
+  hooks: {
+    postPackage: async (_config, packageResult) => {
+      if (process.platform !== 'darwin') return;
+      const appPath = path.join(packageResult.outputPaths[0], 'WKT.app');
+      const entitlements = path.resolve(__dirname, 'entitlements.plist');
+      console.log(`Re-signing ${appPath} with entitlements...`);
+      execSync(
+        `codesign --force --deep --sign - --entitlements "${entitlements}" "${appPath}"`,
+        { stdio: 'inherit' }
+      );
     },
   },
   rebuildConfig: {},
