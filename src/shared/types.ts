@@ -23,6 +23,7 @@ export interface TerminalTab {
   title: string;
   cwd: string;
   port: number | null;
+  lastLine: string;
 }
 
 export type BrowserType = 'chrome' | 'arc';

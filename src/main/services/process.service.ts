@@ -6,6 +6,7 @@ const execFileAsync = promisify(execFile);
 export type PidCwdMap = Record<number, string>;
 export type PidTtyMap = Record<number, string>;
 export type PidParentMap = Record<number, number>;
+export type PidCommMap = Record<number, string>;
 
 /**
  * Build PID -> cwd map from lsof -d cwd.
@@ -34,28 +35,36 @@ export async function getPidCwdMap(): Promise<PidCwdMap> {
 /**
  * Build PID -> tty and PID -> ppid maps from a single ps call.
  */
-export async function getPidMaps(): Promise<{ pidTtyMap: PidTtyMap; pidParentMap: PidParentMap }> {
+export async function getPidMaps(): Promise<{ pidTtyMap: PidTtyMap; pidParentMap: PidParentMap; pidCommMap: PidCommMap }> {
   const pidTtyMap: PidTtyMap = {};
   const pidParentMap: PidParentMap = {};
+  const pidCommMap: PidCommMap = {};
   try {
-    const { stdout } = await execFileAsync('ps', ['-eo', 'pid,ppid,tty']);
-    for (const line of stdout.split('\n').slice(1)) {
+    // Use -ww for wide output so args aren't truncated, and `command` for full args
+    const { stdout } = await execFileAsync('ps', ['-eo', 'pid=,ppid=,tty=,command=', '-ww'], {
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    for (const line of stdout.split('\n')) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      const parts = trimmed.split(/\s+/);
-      if (parts.length >= 3) {
-        const pid = parseInt(parts[0], 10);
-        const ppid = parseInt(parts[1], 10);
+      // Format: PID PPID TTY COMMAND...
+      const match = trimmed.match(/^(\d+)\s+(\d+)\s+(\S+)\s+(.+)$/);
+      if (match) {
+        const pid = parseInt(match[1], 10);
+        const ppid = parseInt(match[2], 10);
+        const tty = match[3];
+        const comm = match[4];
         pidParentMap[pid] = ppid;
-        if (parts[2] !== '??' && parts[2] !== '?') {
-          pidTtyMap[pid] = parts[2];
+        pidCommMap[pid] = comm;
+        if (tty !== '??' && tty !== '?') {
+          pidTtyMap[pid] = tty;
         }
       }
     }
   } catch {
     // ps might fail in rare cases
   }
-  return { pidTtyMap, pidParentMap };
+  return { pidTtyMap, pidParentMap, pidCommMap };
 }
 
 /**

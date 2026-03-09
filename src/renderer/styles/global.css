@@ -114,12 +114,15 @@ button {
 
 /* ── Projects grid (Screen 1) ── */
 .project-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .project-card {
+  flex: 1 1 200px;
+  max-width: 100%;
+  min-width: 0;
   position: relative;
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -128,6 +131,7 @@ button {
   text-align: left;
   color: var(--text-primary);
   transition: background 0.15s, border-color 0.15s;
+  overflow: hidden;
 }
 
 .project-card:hover {
@@ -367,12 +371,27 @@ button {
   flex-shrink: 0;
 }
 
-.tree-tab-title {
+.tree-tab-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tree-tab-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
+}
+
+.tree-tab-cwd {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tree-tab-url {

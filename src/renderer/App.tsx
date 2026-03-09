@@ -215,7 +215,7 @@ export function App() {
                               )}
                             </div>
                             {shells.length > 0 ? (
-                              <TerminalTabList tabs={shells} />
+                              <TerminalTabList tabs={shells} worktreePath={selectedWorktree.worktree.path} />
                             ) : (
                               <div className="view-empty-hint">No shell tabs</div>
                             )}
@@ -230,7 +230,7 @@ export function App() {
                               )}
                             </div>
                             {processes.length > 0 ? (
-                              <TerminalTabList tabs={processes} />
+                              <TerminalTabList tabs={processes} worktreePath={selectedWorktree.worktree.path} />
                             ) : (
                               <div className="view-empty-hint">No running processes</div>
                             )}

@@ -19,6 +19,7 @@ import { getListeningPorts } from './services/port.service';
 import { getRawTerminalTabs, focusTerminalTab } from './services/terminal-tabs.service';
 import { getBrowserTabs, focusBrowserTab } from './services/browser-tabs.service';
 import { getEditorTabsForWorktrees, focusEditorTab } from './services/editor-tabs.service';
+import { getClaudeSessionSummary } from './services/claude-session.service';
 
 const execFileAsync = promisify(execFile);
 
@@ -35,6 +36,76 @@ async function isGitRepo(dirPath: string): Promise<boolean> {
   }
 }
 
+const SHELL_NAMES = new Set(['zsh', '-zsh', 'bash', '-bash', 'fish', '-fish', 'sh', '-sh', 'login']);
+
+/**
+ * Strip full paths from each token in a command string.
+ * e.g. `/usr/local/bin/node /path/to/npm-cli.js run dev` → `node npm-cli.js run dev`
+ */
+function cleanCommand(comm: string): string {
+  return comm
+    .split(/\s+/)
+    .map((token) => {
+      // Strip leading path: /usr/local/bin/node → node
+      const idx = token.lastIndexOf('/');
+      return idx >= 0 ? token.substring(idx + 1) : token;
+    })
+    .join(' ');
+}
+
+/**
+ * Find the foreground command running on a tty.
+ * Strategy: find the shell PID on the tty, then its direct child — that's
+ * the user-invoked command. Return the cleaned-up command string, or '' if idle.
+ */
+function getForegroundCommand(
+  tty: string,
+  ttyPidsMap: Record<string, number[]>,
+  pidParentMap: Record<number, number>,
+  pidCommMap: Record<number, string>,
+  ownPids: Set<number>,
+): string {
+  const pids = ttyPidsMap[tty] || [];
+  if (pids.length === 0) return '';
+
+  // Build set of PIDs on this tty for quick lookup
+  const ttyPidSet = new Set(pids.filter((p) => !ownPids.has(p)));
+
+  // Find all shell PIDs on this tty
+  const shellPidSet = new Set<number>();
+  for (const pid of ttyPidSet) {
+    const comm = pidCommMap[pid] || '';
+    const basename = comm.split('/').pop()?.split(' ')[0] || '';
+    if (SHELL_NAMES.has(basename)) {
+      shellPidSet.add(pid);
+    }
+  }
+
+  if (shellPidSet.size === 0) return '';
+
+  // Pick the innermost shell: prefer a shell whose parent is also a shell
+  // on this tty (e.g., login → -zsh → claude: pick -zsh, not login)
+  let shellPid: number = shellPidSet.values().next().value!;
+  for (const pid of shellPidSet) {
+    const parent = pidParentMap[pid];
+    if (parent && shellPidSet.has(parent)) {
+      shellPid = pid;
+    }
+  }
+
+  // Find the direct child of the shell on the same tty
+  for (const pid of ttyPidSet) {
+    if (pid === shellPid) continue;
+    if (pidParentMap[pid] === shellPid) {
+      const comm = pidCommMap[pid] || '';
+      const cleaned = cleanCommand(comm);
+      return cleaned.length > 120 ? cleaned.substring(0, 120) + '…' : cleaned;
+    }
+  }
+
+  return '';
+}
+
 async function buildProjectStatus(project: ProjectConfig): Promise<{ project: ProjectConfig; worktrees: WorktreeStatus[]; lastRefreshed: number }> {
   // Step 1: Gather all data in parallel
   const [worktrees, pidCwdMap, pidMaps, listeningPorts, rawTermTabs] = await Promise.all([
@@ -45,7 +116,7 @@ async function buildProjectStatus(project: ProjectConfig): Promise<{ project: Pr
     getRawTerminalTabs(),
   ]);
 
-  const { pidTtyMap, pidParentMap } = pidMaps;
+  const { pidTtyMap, pidParentMap, pidCommMap } = pidMaps;
   const worktreePaths = worktrees.map((w) => w.path);
 
   // Exclude our own process tree to avoid self-detection
@@ -161,6 +232,7 @@ async function buildProjectStatus(project: ProjectConfig): Promise<{ project: Pr
       // Only assign a port if it's BOTH on this TTY AND its process CWD is in this worktree.
       // This prevents cross-project port leakage when multiple projects share a terminal.
       const matchedPort = ttyPorts.find((p) => wtPorts.includes(p)) || null;
+      const lastLine = getForegroundCommand(tab.tty, ttyPidsMap, pidParentMap, pidCommMap, ownPids);
       terminalTabsByWorktree.get(bestWt)!.push({
         app: tab.app,
         windowId: tab.windowId,
@@ -168,9 +240,25 @@ async function buildProjectStatus(project: ProjectConfig): Promise<{ project: Pr
         title: tab.title,
         cwd: bestCwd,
         port: matchedPort,
+        lastLine,
       });
     }
   }
+
+  // Step 5b: Enrich Claude Code sessions with human-readable summaries
+  const enrichPromises: Promise<void>[] = [];
+  for (const tabs of terminalTabsByWorktree.values()) {
+    for (const tab of tabs) {
+      if (tab.lastLine) {
+        enrichPromises.push(
+          getClaudeSessionSummary(tab.lastLine, tab.cwd).then((summary) => {
+            if (summary) tab.lastLine = summary;
+          }),
+        );
+      }
+    }
+  }
+  await Promise.all(enrichPromises);
 
   // Step 6: Get browser tabs matching detected ports
   const allPorts = [...new Set([...portsByWorktree.values()].flat())];
