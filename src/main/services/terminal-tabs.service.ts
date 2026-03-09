@@ -109,7 +109,7 @@ async function getTerminalAppTabs(config: TerminalAppConfig): Promise<RawTermina
         tabs.push({
           app: config.app,
           windowId: parts[0].trim(),
-          tabId: parts[1].trim(),
+          tabId: normalizeTty(parts[1].trim()),
           tty: normalizeTty(parts[2].trim()),
           title: parts.slice(3).join('|||').trim(),
         });
@@ -133,57 +133,94 @@ export async function getRawTerminalTabs(): Promise<RawTerminalTab[]> {
  * Focus a specific terminal tab by its stable session/tab ID.
  */
 export async function focusTerminalTab(params: FocusTerminalTabParams): Promise<void> {
-  const { app, tabId } = params;
+  const { app, windowId, tabId } = params;
+  console.log('[focusTerminalTab]', params);
 
   let script: string;
   if (app === 'terminal') {
-    // Terminal.app: tabId is the tty, find by matching
+    // Terminal.app: use `tell window wi` block pattern for reliable property access
     script = `
       tell application "Terminal"
         activate
-        repeat with w in windows
-          set tabCount to count of tabs of w
-          repeat with ti from 1 to tabCount
-            set t to tab ti of w
-            try
-              if tty of t is "/dev/${tabId}" then
-                set index of w to 1
-                set selected of t to true
-                return
-              end if
-            end try
-          end repeat
+        set winCount to count of windows
+        repeat with wi from 1 to winCount
+          tell window wi
+            if (id as text) is "${windowId}" then
+              set tabCount to count of tabs
+              repeat with ti from 1 to tabCount
+                try
+                  if tty of tab ti is "/dev/${tabId}" then
+                    set index of window wi to 1
+                    set selected of tab ti to true
+                    return
+                  end if
+                end try
+              end repeat
+            end if
+          end tell
         end repeat
       end tell
     `;
   } else {
-    // iTerm2: search ALL sessions (including split panes) by unique ID
+    // iTerm2: use `window id N` for a stable reference that doesn't shift with indices.
+    // Two-phase: find target tab index, then bring window to front and select.
     script = `
       tell application "iTerm2"
         activate
-        repeat with w in windows
-          set tabCount to count of tabs of w
-          repeat with ti from 1 to tabCount
-            set t to tab ti of w
-            try
-              repeat with s in sessions of t
-                if unique ID of s is "${tabId}" then
-                  set index of w to 1
-                  tell w to select tab ti
-                  tell s to select
-                  return
-                end if
-              end repeat
-            end try
-          end repeat
-        end repeat
+        set diag to ""
+        set targetTab to -1
+        try
+          set w to window id ${windowId}
+          tell w
+            set tabCount to count of tabs
+            set diag to diag & "tabCount=" & tabCount & linefeed
+            repeat with ti from 1 to tabCount
+              if targetTab is -1 then
+                try
+                  repeat with s in sessions of tab ti
+                    set sid to unique ID of s
+                    set diag to diag & "tab " & ti & " sid=" & sid & linefeed
+                    if sid is "${tabId}" then
+                      set targetTab to ti
+                      set diag to diag & "MATCHED at tab " & ti & linefeed
+                    end if
+                  end repeat
+                end try
+              end if
+            end repeat
+          end tell
+        on error errMsg
+          set diag to diag & "FIND FAILED: " & errMsg & linefeed
+        end try
+        set diag to diag & "targetTab=" & targetTab & linefeed
+        if targetTab is not -1 then
+          try
+            set w to window id ${windowId}
+            set index of w to 1
+            tell w to select tab targetTab
+            repeat with s in sessions of tab targetTab of w
+              if unique ID of s is "${tabId}" then
+                tell s to select
+              end if
+            end repeat
+            set diag to diag & "FOCUS OK" & linefeed
+          on error errMsg
+            set diag to diag & "FOCUS FAILED: " & errMsg & linefeed
+          end try
+        else
+          set diag to diag & "NO match found" & linefeed
+        end if
+        return diag
       end tell
     `;
   }
 
   try {
-    await execFileAsync('osascript', ['-e', script], { timeout: 3000 });
-  } catch {
-    // Focus may fail if window was closed
+    const { stdout } = await execFileAsync('osascript', ['-e', script], { timeout: 3000 });
+    if (stdout.trim()) {
+      console.log('[focusTerminalTab] diag:\n' + stdout);
+    }
+  } catch (err) {
+    console.error('[focusTerminalTab] AppleScript failed:', err);
   }
 }

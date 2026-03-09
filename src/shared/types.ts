@@ -83,4 +83,6 @@ export interface ElectronAPI {
   focusBrowserTab: (params: FocusBrowserTabParams) => Promise<void>;
   focusTerminalTab: (params: FocusTerminalTabParams) => Promise<void>;
   focusEditorTab: (params: FocusEditorTabParams) => Promise<void>;
+  onWindowFocus: (cb: () => void) => () => void;
+  onWindowBlur: (cb: () => void) => () => void;
 }

@@ -7,4 +7,6 @@ export const IPC_CHANNELS = {
   FOCUS_BROWSER_TAB: 'browser:focus-tab',
   FOCUS_TERMINAL_TAB: 'terminal:focus-tab',
   FOCUS_EDITOR_TAB: 'editor:focus-tab',
+  WINDOW_FOCUS: 'window:focus',
+  WINDOW_BLUR: 'window:blur',
 } as const;

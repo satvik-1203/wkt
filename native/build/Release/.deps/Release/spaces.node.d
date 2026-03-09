@@ -1,0 +1,1 @@
+cmd_Release/spaces.node := c++ -bundle -undefined dynamic_lookup -Wl,-search_paths_first -mmacosx-version-min=13.0 -arch arm64 -L./Release -stdlib=libc++  -o Release/spaces.node Release/obj.target/spaces/spaces.o -framework CoreGraphics -framework Foundation

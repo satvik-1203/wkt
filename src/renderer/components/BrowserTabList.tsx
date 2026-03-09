@@ -29,6 +29,14 @@ export function BrowserTabList({ tabs }: BrowserTabListProps) {
     }
   };
 
+  const compactPath = (fullPath: string) => {
+    if (fullPath === '/') return '/';
+    const segments = fullPath.split('/').filter(Boolean);
+    return '/' + segments.map((seg) =>
+      seg.length > 10 ? seg.slice(0, 5) + '…' + seg.slice(-5) : seg
+    ).join('/');
+  };
+
   return (
     <AnimatePresence initial={false}>
       {sorted.map((tab) => {
@@ -49,10 +57,7 @@ export function BrowserTabList({ tabs }: BrowserTabListProps) {
               {tab.browser === 'chrome' ? 'chrome' : 'arc'}
             </span>
             <span className="tree-tab-title">
-              {tab.title || tab.url}
-              {path && path !== '/' && (
-                <span className="tree-tab-url">{path}</span>
-              )}
+              {compactPath(path)}
             </span>
             <span className="tree-tab-port">:{tab.matchedPort}</span>
           </motion.button>

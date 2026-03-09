@@ -11,6 +11,14 @@ const api: ElectronAPI = {
   focusBrowserTab: (params: FocusBrowserTabParams) => ipcRenderer.invoke(IPC_CHANNELS.FOCUS_BROWSER_TAB, params),
   focusTerminalTab: (params: FocusTerminalTabParams) => ipcRenderer.invoke(IPC_CHANNELS.FOCUS_TERMINAL_TAB, params),
   focusEditorTab: (params: FocusEditorTabParams) => ipcRenderer.invoke(IPC_CHANNELS.FOCUS_EDITOR_TAB, params),
+  onWindowFocus: (cb: () => void) => {
+    ipcRenderer.on('window:focus', cb);
+    return () => { ipcRenderer.removeListener('window:focus', cb); };
+  },
+  onWindowBlur: (cb: () => void) => {
+    ipcRenderer.on('window:blur', cb);
+    return () => { ipcRenderer.removeListener('window:blur', cb); };
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

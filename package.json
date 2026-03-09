@@ -1,11 +1,12 @@
 {
-  "name": "dev-ux",
-  "productName": "dev-ux",
+  "name": "wkt",
+  "productName": "WKT",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Git worktree manager",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
+    "prestart": "",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
@@ -21,7 +22,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron",
-      "electron-winstaller"
+      "electron-winstaller",
+      "macos-alias",
+      "fs-xattr"
     ]
   },
   "dependencies": {
@@ -34,6 +37,7 @@
   "devDependencies": {
     "@electron-forge/cli": "^7.11.1",
     "@electron-forge/maker-deb": "^7.11.1",
+    "@electron-forge/maker-dmg": "^7.11.1",
     "@electron-forge/maker-rpm": "^7.11.1",
     "@electron-forge/maker-squirrel": "^7.11.1",
     "@electron-forge/maker-zip": "^7.11.1",
@@ -41,6 +45,7 @@
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
     "@electron/fuses": "^1.0.0",
+    "@electron/universal": "^3.0.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",

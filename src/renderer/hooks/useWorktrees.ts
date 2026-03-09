@@ -8,7 +8,6 @@ export function useWorktrees(projectId: string | null) {
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const fetchStatus = useCallback(async () => {
     if (!projectId) {
       setStatus(null);

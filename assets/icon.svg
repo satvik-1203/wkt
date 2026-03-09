@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1e2e"/>
+      <stop offset="100%" style="stop-color:#11111b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full square background - macOS applies its own rounded mask -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Main branch trunk -->
+  <line x1="400" y1="180" x2="400" y2="844" stroke="#cdd6f4" stroke-width="56" stroke-linecap="round"/>
+
+  <!-- Worktree branch -->
+  <path d="M400 400 Q460 400 520 340 L620 240" stroke="#89b4fa" stroke-width="56" stroke-linecap="round" fill="none"/>
+  <line x1="620" y1="240" x2="620" y2="844" stroke="#89b4fa" stroke-width="56" stroke-linecap="round"/>
+
+  <!-- Commit nodes on main -->
+  <circle cx="400" cy="250" r="46" fill="#f38ba8"/>
+  <circle cx="400" cy="400" r="46" fill="#f38ba8"/>
+  <circle cx="400" cy="620" r="46" fill="#a6e3a1"/>
+  <circle cx="400" cy="780" r="46" fill="#a6e3a1"/>
+
+  <!-- Commit nodes on worktree -->
+  <circle cx="620" cy="300" r="46" fill="#89dceb"/>
+  <circle cx="620" cy="500" r="46" fill="#89dceb"/>
+  <circle cx="620" cy="700" r="46" fill="#89dceb"/>
+</svg>

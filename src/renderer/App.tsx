@@ -29,9 +29,10 @@ export function App() {
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
+  const selectedWorktreePath = view.kind === 'worktree' ? view.worktreePath : null;
   const selectedWorktree: WorktreeStatus | null =
-    view.kind === 'worktree' && status
-      ? status.worktrees.find((w) => w.worktree.path === view.worktreePath) ?? null
+    selectedWorktreePath && status
+      ? status.worktrees.find((w) => w.worktree.path === selectedWorktreePath) ?? null
       : null;
 
   const handleAdd = async () => {
@@ -274,12 +275,14 @@ export function App() {
               )}
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
 
       <StatusBar
         lastRefreshed={status?.lastRefreshed ?? null}
         loading={loading}
+
         onRefresh={refresh}
       />
     </div>

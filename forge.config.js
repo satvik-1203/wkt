@@ -5,9 +5,23 @@ const { VitePlugin } = require('@electron-forge/plugin-vite');
 module.exports = {
   packagerConfig: {
     asar: true,
+    name: 'WKT',
+    icon: './assets/icon',
+    extraResource: [],
+    universalOptions: {
+      mergeASARs: true,
+      force: true,
+    },
   },
   rebuildConfig: {},
   makers: [
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        icon: './assets/icon.icns',
+        format: 'ULFO',
+      },
+    },
     {
       name: '@electron-forge/maker-squirrel',
       config: {},
