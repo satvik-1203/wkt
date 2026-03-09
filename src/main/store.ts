@@ -1,13 +1,15 @@
 import Store from 'electron-store';
-import type { ProjectConfig } from '../shared/types';
+import type { ProjectConfig, PinnedWorktree } from '../shared/types';
 
 interface StoreSchema {
   projects: ProjectConfig[];
+  pinnedWorktrees: PinnedWorktree[];
 }
 
 const store = new Store<StoreSchema>({
   defaults: {
     projects: [],
+    pinnedWorktrees: [],
   },
 });
 
@@ -28,4 +30,12 @@ export function removeProject(id: string): void {
 
 export function getProjectById(id: string): ProjectConfig | undefined {
   return getProjects().find((p) => p.id === id);
+}
+
+export function getPinnedWorktrees(): PinnedWorktree[] {
+  return store.get('pinnedWorktrees');
+}
+
+export function setPinnedWorktrees(pins: PinnedWorktree[]): void {
+  store.set('pinnedWorktrees', pins);
 }

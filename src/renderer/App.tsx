@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useProjects } from './hooks/useProjects';
 import { useWorktrees } from './hooks/useWorktrees';
+import { usePinnedWorktrees } from './hooks/usePinnedWorktrees';
 import { ProjectPicker } from './components/ProjectPicker';
 import { TerminalTabList } from './components/TerminalTabList';
 import { BrowserTabList } from './components/BrowserTabList';
 import { EditorTabList } from './components/EditorTabList';
+import { PinDropdown } from './components/PinDropdown';
 import { StatusBar } from './components/StatusBar';
 import type { WorktreeStatus } from '../shared/types';
 
@@ -54,9 +56,33 @@ export function App() {
   const goWorktree = (projectId: string, path: string) =>
     setView({ kind: 'worktree', projectId, worktreePath: path });
 
+  const { pins, addPin, removePin, isPinned } = usePinnedWorktrees();
+
+  const currentPin =
+    view.kind === 'worktree' && selectedProject && selectedWorktree
+      ? {
+          projectId: view.projectId,
+          projectName: selectedProject.name,
+          worktreePath: view.worktreePath,
+          worktreeLabel: selectedWorktree.worktree.label,
+        }
+      : null;
+
+  const currentIsPinned =
+    view.kind === 'worktree' ? isPinned(view.projectId, view.worktreePath) : false;
+
   return (
     <div className="view-root">
       <div className="draggable-titlebar" />
+
+      <PinDropdown
+        pins={pins}
+        currentPin={currentPin}
+        currentIsPinned={currentIsPinned}
+        onSelectPin={goWorktree}
+        onAddPin={addPin}
+        onRemovePin={removePin}
+      />
 
       {(projectError || statusError) && (
         <div className="error-msg" style={{ margin: '0 24px' }}>
@@ -268,6 +294,23 @@ export function App() {
                         <div className="view-empty-hint">No editor windows</div>
                       )}
                     </div>
+                  </div>
+                </div>
+              ) : !status ? (
+                <div className="skeleton-detail">
+                  <div className="skeleton-line skeleton-line-short" />
+                  <div className="skeleton-line skeleton-line-shorter" />
+                  <div className="skeleton-sections">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="skeleton-section">
+                        <div className="skeleton-section-header">
+                          <div className="skeleton-dot" />
+                          <div className="skeleton-line skeleton-line-label" />
+                        </div>
+                        <div className="skeleton-row" />
+                        <div className="skeleton-row" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : (

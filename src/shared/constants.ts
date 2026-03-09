@@ -9,4 +9,6 @@ export const IPC_CHANNELS = {
   FOCUS_EDITOR_TAB: 'editor:focus-tab',
   WINDOW_FOCUS: 'window:focus',
   WINDOW_BLUR: 'window:blur',
+  GET_PINS: 'pins:get',
+  SET_PINS: 'pins:set',
 } as const;

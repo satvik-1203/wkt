@@ -12,7 +12,7 @@ import type {
   FocusTerminalTabParams,
   FocusEditorTabParams,
 } from '../shared/types';
-import { getProjects, addProject, removeProject, getProjectById } from './store';
+import { getProjects, addProject, removeProject, getProjectById, getPinnedWorktrees, setPinnedWorktrees } from './store';
 import { getWorktrees } from './services/git.service';
 import { getPidCwdMap, getPidMaps } from './services/process.service';
 import { getListeningPorts } from './services/port.service';
@@ -335,5 +335,13 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.FOCUS_EDITOR_TAB, async (_event, params: FocusEditorTabParams) => {
     await focusEditorTab(params);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.GET_PINS, async () => {
+    return getPinnedWorktrees();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SET_PINS, async (_event, pins: import('../shared/types').PinnedWorktree[]) => {
+    setPinnedWorktrees(pins);
   });
 }

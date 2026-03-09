@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ProjectStatus } from '../../shared/types';
 import { usePolling } from './usePolling';
 
@@ -8,6 +8,13 @@ export function useWorktrees(projectId: string | null) {
   const [status, setStatus] = useState<ProjectStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Clear stale data immediately when switching projects
+  useEffect(() => {
+    setStatus(null);
+    setError(null);
+  }, [projectId]);
+
   const fetchStatus = useCallback(async () => {
     if (!projectId) {
       setStatus(null);

@@ -75,6 +75,13 @@ export interface FocusEditorTabParams {
   windowId: string;
 }
 
+export interface PinnedWorktree {
+  projectId: string;
+  projectName: string;
+  worktreePath: string;
+  worktreeLabel: string;
+}
+
 export interface ElectronAPI {
   pickFolder: () => Promise<string | null>;
   addProject: (path: string) => Promise<ProjectConfig>;
@@ -84,6 +91,8 @@ export interface ElectronAPI {
   focusBrowserTab: (params: FocusBrowserTabParams) => Promise<void>;
   focusTerminalTab: (params: FocusTerminalTabParams) => Promise<void>;
   focusEditorTab: (params: FocusEditorTabParams) => Promise<void>;
+  getPins: () => Promise<PinnedWorktree[]>;
+  setPins: (pins: PinnedWorktree[]) => Promise<void>;
   onWindowFocus: (cb: () => void) => () => void;
   onWindowBlur: (cb: () => void) => () => void;
 }
