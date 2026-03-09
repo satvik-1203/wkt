@@ -9,18 +9,21 @@ interface EditorConfig {
   /** Substrings to match in the `comm` column of `ps` output */
   processPatterns: string[];
   cliCommand: string;
+  cliCommandFallback: string;
 }
 
 const EDITORS: EditorConfig[] = [
   {
     app: 'vscode',
     processPatterns: ['Code Helper', '/Code.app/'],
-    cliCommand: 'code',
+    cliCommand: '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code',
+    cliCommandFallback: 'code',
   },
   {
     app: 'cursor',
     processPatterns: ['Cursor Helper', '/Cursor.app/'],
-    cliCommand: 'cursor',
+    cliCommand: '/Applications/Cursor.app/Contents/Resources/app/bin/cursor',
+    cliCommandFallback: 'cursor',
   },
 ];
 
@@ -97,14 +100,21 @@ export async function focusEditorTab(params: FocusEditorTabParams): Promise<void
   const config = EDITORS.find((e) => e.app === params.app);
   if (!config) return;
 
-  try {
-    await execFileAsync(config.cliCommand, [params.windowId], { timeout: 5000 });
-  } catch {
+  // Try full app bundle path first, then PATH-based command
+  for (const cmd of [config.cliCommand, config.cliCommandFallback]) {
     try {
-      const appName = params.app === 'vscode' ? 'Visual Studio Code' : 'Cursor';
-      await execFileAsync('osascript', ['-e', `tell application "${appName}" to activate`], { timeout: 3000 });
+      await execFileAsync(cmd, [params.windowId], { timeout: 5000 });
+      return;
     } catch {
-      // Best effort
+      // Try next
     }
+  }
+
+  // Last resort: just activate the app
+  try {
+    const appName = params.app === 'vscode' ? 'Visual Studio Code' : 'Cursor';
+    await execFileAsync('osascript', ['-e', `tell application "${appName}" to activate`], { timeout: 3000 });
+  } catch {
+    // Best effort
   }
 }
