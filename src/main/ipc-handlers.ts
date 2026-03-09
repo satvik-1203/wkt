@@ -245,20 +245,15 @@ async function buildProjectStatus(project: ProjectConfig): Promise<{ project: Pr
     }
   }
 
-  // Step 5b: Enrich Claude Code sessions with human-readable summaries
-  const enrichPromises: Promise<void>[] = [];
+  // Step 5b: Enrich Claude Code sessions with "claude code" label
   for (const tabs of terminalTabsByWorktree.values()) {
     for (const tab of tabs) {
       if (tab.lastLine) {
-        enrichPromises.push(
-          getClaudeSessionSummary(tab.lastLine, tab.cwd).then((summary) => {
-            if (summary) tab.lastLine = summary;
-          }),
-        );
+        const summary = getClaudeSessionSummary(tab.lastLine);
+        if (summary) tab.lastLine = summary;
       }
     }
   }
-  await Promise.all(enrichPromises);
 
   // Step 6: Get browser tabs matching detected ports
   const allPorts = [...new Set([...portsByWorktree.values()].flat())];
