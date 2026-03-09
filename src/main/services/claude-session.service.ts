@@ -1,4 +1,4 @@
-import { readFile, readdir, stat, open } from 'fs/promises';
+import { readdir, stat, open } from 'fs/promises';
 import path from 'path';
 import os from 'os';
 
@@ -60,63 +60,34 @@ async function readSessionSummary(sessionId: string, projectKey: string): Promis
     const content = buf.toString('utf-8', 0, bytesRead);
     const lines = content.split('\n').slice(0, 50);
 
-    let slug: string | null = null;
-    let firstUserMessage: string | null = null;
-
     for (const line of lines) {
       if (!line.trim()) continue;
       try {
         const entry = JSON.parse(line);
+        if (entry.type !== 'user' || !entry.message) continue;
+        // Only match entries belonging to this session
+        if (entry.sessionId && entry.sessionId !== sessionId) continue;
 
-        // Look for slug
-        if (!slug && entry.slug && typeof entry.slug === 'string') {
-          slug = entry.slug;
+        const msg = typeof entry.message === 'string'
+          ? entry.message
+          : entry.message?.content;
+        let text: string | null = null;
+        if (typeof msg === 'string' && msg.trim().length > 0) {
+          text = msg.trim();
+        } else if (Array.isArray(entry.message?.content)) {
+          const textBlock = entry.message.content.find(
+            (b: { type: string; text?: string }) => b.type === 'text' && b.text,
+          );
+          if (textBlock) text = textBlock.text.trim();
         }
 
-        // Look for first user message
-        if (!firstUserMessage && entry.type === 'user' && entry.message) {
-          const msg = typeof entry.message === 'string'
-            ? entry.message
-            : entry.message?.content;
-          if (typeof msg === 'string' && msg.trim().length > 0) {
-            firstUserMessage = msg.trim();
-          } else if (Array.isArray(entry.message?.content)) {
-            // Handle content blocks (e.g., [{type: "text", text: "..."}])
-            const textBlock = entry.message.content.find(
-              (b: { type: string; text?: string }) => b.type === 'text' && b.text,
-            );
-            if (textBlock) firstUserMessage = textBlock.text.trim();
-          }
+        if (text) {
+          const firstLine = text.split('\n')[0];
+          return firstLine.length > 80 ? firstLine.substring(0, 80) + '…' : firstLine;
         }
-
-        if (slug && firstUserMessage) break;
       } catch {
         // skip malformed lines
       }
-    }
-
-    // Try plan title from slug
-    if (slug) {
-      try {
-        const planPath = path.join(claudeDir, 'plans', `${slug}.md`);
-        const planContent = await readFile(planPath, 'utf-8');
-        const headingMatch = planContent.match(/^#\s+(.+)$/m);
-        if (headingMatch) {
-          const title = headingMatch[1].trim();
-          if (title.length > 0) {
-            return title.length > 80 ? title.substring(0, 80) + '…' : title;
-          }
-        }
-      } catch {
-        // no plan file — fall through
-      }
-    }
-
-    // Fall back to first user message
-    if (firstUserMessage) {
-      // Take first line only
-      const firstLine = firstUserMessage.split('\n')[0];
-      return firstLine.length > 80 ? firstLine.substring(0, 80) + '…' : firstLine;
     }
   } catch {
     // file not readable
